@@ -1,0 +1,27 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+env/
+build/
+dist/
+*.spec
+*.egg-info/
+
+# Data files
+*.zip
+*.rar
+*.7z
+*.tar.gz
+*.tmp
+*.temp
+tmp*/
+unpacked*/
+passwords.txt
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.code-workspace
+*.log
