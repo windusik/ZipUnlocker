@@ -33,9 +33,4 @@ cd ZipUnlocker
 ```bash
 pip install -r requirements.txt
 ```
-3. Сгенерируйте пароли
-```bash
-python generate.py
-```
-4. Запустите start.bat (**Windows**)
-4. Запустите main.py (**Linux**)
+3. Запустите start.bat (или main.py для linux)
