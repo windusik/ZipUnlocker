@@ -74,12 +74,15 @@ class ArchiveUtils:
                     archive.extractall(output_dir)
         
         else:
+            # Используем patoolib для остальных форматов
             try:
                 if password:
+                    # Для форматов, поддерживающих пароли через patoolib
                     patoolib.extract_archive(input_path, outdir=output_dir, password=password)
                 else:
                     patoolib.extract_archive(input_path, outdir=output_dir)
             except:
+                # Fallback для форматов без поддержки паролей
                 if file_type in ('.tar', '.tgz', '.tbz2', '.txz', '.gz', '.bz2', '.xz'):
                     mode = 'r'
                     if file_type in ('.tgz', '.gz'):
@@ -103,6 +106,7 @@ class ArchiveUtils:
                             archive.write(file_path, arcname)
             
             elif file_type == '.rar':
+                # RAR создается через patoolib, так как rarfile не поддерживает создание RAR
                 patoolib.create_archive(output_path, [input_dir], program='rar')
             
             elif file_type == '.7z':
@@ -110,20 +114,22 @@ class ArchiveUtils:
                     archive.writeall(input_dir, os.path.basename(input_dir))
         
         else:
+            # Используем patoolib для остальных форматов
             patoolib.create_archive(output_path, [input_dir])
     
     def remove_password(self, input_path, output_path, progress_callback, status_callback):
         file_type = self.get_file_type(input_path)
         
         if not file_type:
-            return "Неподдерживаемый формат файла"
+            return "Unsupported file format"
         
         temp_dir = "temp_unpack"
         os.makedirs(temp_dir, exist_ok=True)
         
         password = None
         try:
-            status_callback("Проверка архива...")
+            # Шаг 1: Попытка открыть без пароля
+            status_callback("Checking archive...")
             progress_callback(10)
             
             try:
@@ -131,7 +137,8 @@ class ArchiveUtils:
             except (RuntimeError, rarfile.PasswordRequired, py7zr.exceptions.PasswordRequired, 
                     patoolib.util.PatoolError, Exception) as e:
                 if "password" in str(e).lower() or "encrypted" in str(e).lower():
-                    status_callback("Подбор пароля...")
+                    # Шаг 2: Подбор пароля
+                    status_callback("Cracking password...")
                     progress_callback(20)
                     
                     def update_progress():
@@ -139,17 +146,19 @@ class ArchiveUtils:
                     
                     password = self.cracker.crack_archive(input_path, file_type, update_progress)
                     if password is None:
-                        return "Не удалось подобрать пароль"
+                        return "Failed to crack password"
                     
-                    status_callback(f"Найден пароль: {password}")
+                    status_callback(f"Password found: {password}")
                     progress_callback(60)
                     
-                    status_callback("Извлечение файлов...")
+                    # Шаг 3: Извлечение с найденным паролем
+                    status_callback("Extracting files...")
                     self.extract_archive(input_path, temp_dir, password)
                 else:
-                    return f"Ошибка при открытии архива: {str(e)}"
+                    return f"Error opening archive: {str(e)}"
             
-            status_callback("Создание нового архива...")
+            # Шаг 4: Перепаковка без пароля
+            status_callback("Creating new archive...")
             progress_callback(70)
             self.create_archive(temp_dir, output_path, file_type)
             
