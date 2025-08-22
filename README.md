@@ -2,35 +2,27 @@
 
 ![ZipUnlocker Screenshot](screenshot.png)
 
-> **Внимание**: Это pre-release, могут быть ошибки и баги.
+> **Warning**: there may be errors and bugs that will not be fixed
 
-ZipUnlocker - это простая программа подбора паролей для архивов.
+ZipUnlocker - this is a simple password cracking program for archives.
 
-## Качества
+## Characteristics
 
-- Drag & drop интерфейс
-- Поддержка нескольких форматов
-- Визуальное отслеживание прогресса
-- Быстрый подбор пароля
-- Автоматическая распаковка после подбора
+- Drag-and-drop interfaces
+- Support for multiple formats
+- Visual progress tracking
+- Quick password guessing
+- Automatic unpacking after guessing
 
-## Поддерживаемые форматы:
 
-| Формат   | Поддержка |
-|----------|------------------|
-| ZIP      | ✅               |
-| RAR      | ✅               |
-| 7Z       | ✅               |
 
-## Установка
-
-1. Клон репозитория:
+1. Clone repository:
 ```bash
 git clone https://github.com/windusik/ZipUnlocker.git
 cd ZipUnlocker
 ```
-2. Установите требования
+2. install requirements
 ```bash
 pip install -r requirements.txt
 ```
-3. Запустите start.bat (или main.py для linux)
+3. open: start.bat (or main.py for linux)
