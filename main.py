@@ -1,134 +1,149 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog, scrolledtext
 import os
-from archive_utils import ArchiveUtils
-import threading
 import time
+from archive_utils import ArchiveUtils
+from themes.dark_theme import THEME, FONTS
+import threading
+from PIL import Image, ImageTk
+import sys
 
 class ZipUnlockerApp(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("ZipUnlocker v2")
-        self.geometry("600x500")
-        self.configure(bg="#2b2b2b")
+        self.title("ZipUnlocker v3")
+        self.geometry("700x550")
+        self.configure(bg=THEME["bg"])
+        self.resizable(True, True)
+        
+        try:
+            if getattr(sys, 'frozen', False):
+                application_path = sys._MEIPASS
+            else:
+                application_path = os.path.dirname(os.path.abspath(__file__))
+            
+            icon_path = os.path.join(application_path, "assets", "icon.png")
+            if os.path.exists(icon_path):
+                self.iconphoto(True, tk.PhotoImage(file=icon_path))
+        except:
+            pass
         
         self.style = ttk.Style()
         self.style.theme_use('clam')
-        self.style.configure("TProgressbar", thickness=20, troughcolor='#3c3f41', background='#4caf50')
+        self.style.configure("TProgressbar", thickness=20, troughcolor=THEME["secondary"], background=THEME["progress"])
+        self.style.configure("TButton", background=THEME["button"], foreground=THEME["fg"])
+        self.style.map("TButton", background=[("active", THEME["button_hover"])])
         
-        # Заголовок
-        title_frame = tk.Frame(self, bg="#2b2b2b")
+        title_frame = tk.Frame(self, bg=THEME["bg"])
         title_frame.pack(pady=10, fill="x")
         
         title_label = tk.Label(
             title_frame,
-            text="ZipUnlocker v2",
-            font=("Arial", 20, "bold"),
-            fg="#4caf50",
-            bg="#2b2b2b"
+            text="ZipUnlocker v3",
+            font=FONTS["title"],
+            fg=THEME["accent"],
+            bg=THEME["bg"]
         )
         title_label.pack()
         
-        version_label = tk.Label(
+        subtitle_label = tk.Label(
             title_frame,
-            text="Release",
-            font=("Arial", 10),
-            fg="#ff6b6b",
-            bg="#2b2b2b"
+            text="Final Release",
+            font=FONTS["subtitle"],
+            fg=THEME["text_highlight"],
+            bg=THEME["bg"]
         )
-        version_label.pack()
+        subtitle_label.pack()
         
-        github_link = tk.Label(
-            self,
-            text="GitHub Repository",
-            font=("Arial", 10, "underline"),
-            fg="#64b5f6",
-            cursor="hand2",
-            bg="#2b2b2b"
-        )
-        github_link.pack(pady=5)
-        github_link.bind("<Button-1>", lambda e: self.open_github())
-        
-  
-        content_frame = tk.Frame(self, bg="#3c3f41", padx=10, pady=10)
+        content_frame = tk.Frame(self, bg=THEME["secondary"], padx=15, pady=15)
         content_frame.pack(pady=10, padx=20, fill="both", expand=True)
         
-
-        self.select_button = tk.Button(
+        self.select_button = ttk.Button(
             content_frame,
-            text="Выбрать архив",
-            font=("Arial", 12),
-            bg="#4caf50",
-            fg="white",
-            relief="flat",
+            text="Выбрать архив для разблокировки",
             command=self.select_file
         )
         self.select_button.pack(pady=10)
         
-        # Информация о форматах
-        formats_label = tk.Label(
+        self.file_info = tk.Label(
             content_frame,
-            text="Поддерживаемые форматы: .ZIP .RAR .7Z .TAR.GZ .TAR.BZ2 .TAR.XZ",
-            font=("Arial", 10),
-            fg="#bdbdbd",
-            bg="#3c3f41"
+            text="Файл не выбран",
+            font=FONTS["small"],
+            fg=THEME["fg"],
+            bg=THEME["secondary"],
+            wraplength=500
         )
-        formats_label.pack(pady=5)
+        self.file_info.pack(pady=5)
         
-        # Статус
         self.status = tk.Label(
             content_frame,
             text="Ожидание файла...",
-            bg="#3c3f41",
-            fg="#64b5f6",
-            font=("Arial", 10)
+            bg=THEME["secondary"],
+            fg=THEME["text_highlight"],
+            font=FONTS["normal"]
         )
         self.status.pack(pady=5)
         
-        # Прогресс-бар
         self.progress = ttk.Progressbar(
             content_frame,
             orient="horizontal",
-            length=400,
+            length=500,
             mode="determinate"
         )
         self.progress.pack(pady=10, fill="x")
         
-        # Лог
+        log_frame = tk.Frame(content_frame, bg=THEME["secondary"])
+        log_frame.pack(fill="both", expand=True, pady=(10, 0))
+        
         log_label = tk.Label(
-            content_frame,
-            text="Лог операций:",
-            font=("Arial", 10, "bold"),
-            fg="#bdbdbd",
-            bg="#3c3f41"
+            log_frame,
+            text="Журнал операций:",
+            font=FONTS["subtitle"],
+            fg=THEME["fg"],
+            bg=THEME["secondary"]
         )
-        log_label.pack(anchor="w", pady=(10, 5))
+        log_label.pack(anchor="w")
         
         self.log_text = scrolledtext.ScrolledText(
-            content_frame,
+            log_frame,
             height=8,
-            bg="#2b2b2b",
-            fg="#e0e0e0",
-            font=("Consolas", 9)
+            bg=THEME["bg"],
+            fg=THEME["fg"],
+            font=("Consolas", 9),
+            relief="flat",
+            borderwidth=1
         )
-        self.log_text.pack(fill="both", expand=True)
+        self.log_text.pack(fill="both", expand=True, pady=(5, 0))
         self.log_text.config(state=tk.DISABLED)
         
-        # Предупреждение
-        warning = tk.Label(
-            self,
-            text="Pre-Release: Возможны ошибки!",
-            fg="#ff6b6b",
-            bg="#2b2b2b",
-            font=("Arial", 9, "italic")
+        stats_frame = tk.Frame(content_frame, bg=THEME["secondary"])
+        stats_frame.pack(fill="x", pady=(10, 0))
+        
+        self.stats_label = tk.Label(
+            stats_frame,
+            text="Обработано архивов: 0 | Успешно: 0 | С ошибками: 0",
+            font=FONTS["small"],
+            fg=THEME["fg"],
+            bg=THEME["secondary"]
         )
-        warning.pack(side="bottom", pady=5)
+        self.stats_label.pack(side="left")
+        
+        copyright_label = tk.Label(
+            self,
+            text="© 2025 Platon U. All rights reserved.",
+            font=FONTS["small"],
+            fg=THEME["fg"],
+            bg=THEME["bg"]
+        )
+        copyright_label.pack(side="bottom", pady=5)
         
         self.utils = ArchiveUtils()
-    
-    def open_github(self):
-        import webbrowser
-        webbrowser.open("https://github.com/windusik/ZipUnlocker")
+        self.processed_count = 0
+        self.success_count = 0
+        self.error_count = 0
+        
+        self.log_message("ZipUnlocker v3 инициализирован и готов к работе")
+        self.log_message(f"Поддерживаемых форматов: {len(self.utils.supported_formats)}")
     
     def log_message(self, message):
         self.log_text.config(state=tk.NORMAL)
@@ -137,44 +152,42 @@ class ZipUnlockerApp(tk.Tk):
         self.log_text.see(tk.END)
         self.log_text.config(state=tk.DISABLED)
     
+    def update_stats(self):
+        self.stats_label.config(
+            text=f"Обработано архивов: {self.processed_count} | Успешно: {self.success_count} | С ошибками: {self.error_count}"
+        )
+    
     def select_file(self):
         file_path = filedialog.askopenfilename(
-            title="Выберите архив",
-            filetypes=[
-                ("Архивы", "*.zip *.rar *.7z *.tar.gz *.tgz *.tar.bz2 *.tbz2 *.tar.xz *.txz"),
-                ("Все файлы", "*.*")
-            ]
+            title="Выберите архив для разблокировки",
+            filetypes=[("Все поддерживаемые архивы", 
+                       "*.zip *.rar *.7z *.tar *.gz *.tgz *.bz2 *.tbz2 *.xz *.txz "
+                       "*.z *.lz *.lzma *.lzo *.rz *.sz *.ace *.arj *.cab *.cpio "
+                       "*.deb *.dmg *.iso *.lha *.lzh *.msi *.rpm *.udf *.wim *.xar *.zst")]
         )
         if not file_path:
             return
         
-        # Формирование выходного пути
-        filename = file_path.lower()
-        if filename.endswith(".tar.gz"):
-            base_name = filename.replace(".tar.gz", "")
-            output_path = f"{base_name}_unlocked.tar.gz"
-        elif filename.endswith(".tgz"):
-            base_name = filename.replace(".tgz", "")
-            output_path = f"{base_name}_unlocked.tar.gz"
-        elif filename.endswith(".tar.bz2"):
-            base_name = filename.replace(".tar.bz2", "")
-            output_path = f"{base_name}_unlocked.tar.bz2"
-        elif filename.endswith(".tbz2"):
-            base_name = filename.replace(".tbz2", "")
-            output_path = f"{base_name}_unlocked.tar.bz2"
-        elif filename.endswith(".tar.xz"):
-            base_name = filename.replace(".tar.xz", "")
-            output_path = f"{base_name}_unlocked.tar.xz"
-        elif filename.endswith(".txz"):
-            base_name = filename.replace(".txz", "")
-            output_path = f"{base_name}_unlocked.tar.xz"
-        else:
-            base_name, ext = os.path.splitext(file_path)
-            output_path = f"{base_name}_unlocked{ext}"
+        file_type = self.utils.get_file_type(file_path)
+        if not file_type:
+            messagebox.showerror("Ошибка", "Неподдерживаемый формат файла")
+            return
         
-        self.log_message(f"Выбран файл: {os.path.basename(file_path)}")
+        base_name, ext = os.path.splitext(file_path)
+        if file_type in ('.tgz', '.tbz2', '.txz'):
+            base_name = base_name.replace(ext, '')
+            output_path = f"{base_name}_unlocked{file_type}"
+        else:
+            output_path = f"{base_name}_unlocked{file_type}"
+        
+        self.file_info.config(text=f"Выбран файл: {os.path.basename(file_path)}")
+        self.log_message(f"Начата обработка: {os.path.basename(file_path)}")
+        self.log_message(f"Тип архива: {self.utils.supported_formats[file_type]}")
         self.status.config(text="Обработка...")
         self.select_button.config(state=tk.DISABLED)
+        
+        self.processed_count += 1
+        self.update_stats()
         
         thread = threading.Thread(
             target=self.process_archive,
@@ -202,15 +215,19 @@ class ZipUnlockerApp(tk.Tk):
         result = self.utils.remove_password(input_path, output_path, progress_callback, status_callback)
         
         if result is True:
-            self.update_status(f"Готово: {os.path.basename(output_path)}")
+            self.update_status("Готово!")
+            self.log_message(f"Файл успешно обработан: {os.path.basename(output_path)}")
+            self.success_count += 1
             messagebox.showinfo("Успех", "Пароль успешно снят!")
         else:
             self.update_status("Ошибка!")
-            self.log_message(f"Ошибка: {result}")
+            self.log_message(f"Ошибка обработки: {result}")
+            self.error_count += 1
             messagebox.showerror("Ошибка", f"Ошибка обработки: {result}")
         
         self.progress['value'] = 0
         self.select_button.config(state=tk.NORMAL)
+        self.update_stats()
 
 if __name__ == "__main__":
     app = ZipUnlockerApp()
